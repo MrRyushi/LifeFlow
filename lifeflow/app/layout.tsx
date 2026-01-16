@@ -1,3 +1,4 @@
+import { ModeToggle } from "@/components/ModeToggle";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider"
 
@@ -17,6 +18,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <ModeToggle />
             {children}
           </ThemeProvider>
       </body>
