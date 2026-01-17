@@ -2,25 +2,40 @@
 import { ModeToggle } from "@/components/ModeToggle";
 import React, {useState} from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/firebase/firebase";
+import { auth, db } from "@/firebase/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const router = useRouter();
 
-  const handleLogin = (event: React.FormEvent) => {
+  const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
-    signInWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-        // Signed in 
-        const user = userCredential.user;
-        alert("Login Successful");
-        // ...
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-      });
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log('Login successful:', user);
+
+      // Redirect the user based on their role
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+      const userData = userSnap.data();
+      console.log("User data:", userData);
+
+      if (userData.role === "blood-center-staff") {
+        router.push("/blood-center-donors");
+      }
+    } else {
+      console.error("No user document found!");
+    }
+
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -36,7 +51,7 @@ const Login = () => {
               name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-gray-200 py-1 rounded-lg"
+              className="bg-gray-200 py-1 rounded-lg px-2 text-black"
             />
           </div>
           <div className="flex flex-col mt-2">
@@ -46,7 +61,7 @@ const Login = () => {
               name="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-gray-200 py-1 rounded-lg"
+              className="bg-gray-200 py-1 rounded-lg px-2 text-black"
             />
           </div>
           <button
